@@ -131,7 +131,11 @@ def main():
         # TODO: Do we always want to do this, or just for GELF?
         logging.getLogger().addFilter(CheckMetadataFilter(args.checker, args.team, args.tick))
 
-    run(args)
+    try:
+        run(args)
+    except Exception as e:
+        logging.getLogger().exception("Checker script failed with unhandled exception")
+        raise e
 
 if __name__ == '__main__':
     main()

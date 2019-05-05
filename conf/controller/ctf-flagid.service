@@ -1,0 +1,11 @@
+[Unit]
+Description=CTF Gameserver Flagid Exporter
+After=postgresql.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/ctf-gameserver/flagid.env
+ExecStart=/usr/bin/ctf-flagid
+Restart=on-failure
+User=nobody
+Group=nogroup

@@ -6,6 +6,5 @@ After=postgresql.service
 Type=oneshot
 EnvironmentFile=/etc/ctf-gameserver/flagid.env
 ExecStart=/usr/bin/ctf-flagid
-Restart=on-failure
 User=nobody
 Group=nogroup

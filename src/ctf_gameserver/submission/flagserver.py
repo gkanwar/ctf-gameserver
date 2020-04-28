@@ -39,56 +39,47 @@ class FlagHandler(asynchat.async_chat):
         return int(tick + 0.2)
 
     def _handle_flag(self):
-        if self.buffer == b'':
-            self._reply(b"418 I'm a teapot!")
-            return
-
-        if self.buffer == b'666':
-            self._reply(b"So this, then, was the kernel of the brute!")
-            return
-
         now = datetime.datetime.now(tz=datetime.timezone.utc)
         if now < self._conteststart:
-            self._reply(b"Contest didn't even start yet!")
+            self._reply(b"ERR game not running")
             return
 
         if now > self._contestend:
-            self._reply(b"Contest already over!")
+            self._reply(b"ERR game not running")
             return
 
         try:
             curflag = self.buffer.decode('us-ascii')
         except UnicodeDecodeError as e:
-            self._reply(u"Flags should be of the Format [-_a-zA-Z0-9]+"
-                        .encode('utf-8'))
+            self._reply(b"ERR invalid flag format")
             return
 
         try:
             team, service, _, timestamp = flag.verify(curflag, self._secret)
         except flag.InvalidFlagFormat:
-            self._reply(b"Flag not recognized")
+            self._reply(b"ERR invalid flag format")
             return
         except flag.InvalidFlagMAC:
-            self._reply(b"No such Flag")
+            self._reply(b"ERR unknown flag")
             return
         except flag.FlagExpired as e:
-            self._reply((u"Flag expired since %.1f seconds" % e.args).encode('utf-8'))
+            self._reply(b"ERR flag too old")
             return
 
         if team == self.team:
-            self._reply(b"Can't submit a flag for your own team")
+            self._reply(b"ERR your own flag")
             return
 
         try:
             result = self._store_capture(team, service, timestamp)
             if result:
-                self._reply(u"Thank you for your submission!".encode('utf-8'))
+                self._reply(b"OK thank you for reporting this data leak!")
 
         except psycopg2.DatabaseError as psqle:
             self._logger.exception("Error while inserting values into database")
             self._logger.warning("%s: %s", psqle.diag.severity, psqle.diag.message_primary)
             self._logger.info(psqle.diag.internal_query)
-            self._reply(u"Something went wrong with your submission!".encode('utf-8'))
+            self._reply(b"ERR internal error")
 
 
     def _store_capture(self, team, service, timestamp):
@@ -98,7 +89,7 @@ class FlagHandler(asynchat.async_chat):
                                (team,))
                 nopp, = cursor.fetchone()
                 if nopp:
-                    self._reply(u"Can not submit flags for the NOP team".encode("utf-8"))
+                    self._reply(b"ERR flag from NOP team")
                     return False
 
                 tick = self._get_tick(timestamp)
@@ -116,7 +107,7 @@ class FlagHandler(asynchat.async_chat):
                 count = cursor.fetchone()[0]
 
                 if count > 0:
-                    self._reply(u"Flags should only be submitted once!".encode('utf-8'))
+                    self._reply(b"ERR flag already submitted")
                     return False
 
                 cursor.execute("""INSERT INTO scoring_capture
@@ -130,7 +121,7 @@ class FlagHandler(asynchat.async_chat):
 
 
     def _banner(self):
-        self.push(u"FAUSTCTF Flagserver\n"
+        self.push(u"CTF Flagserver (by FAUST)\n"
                   u"One flag per line please!\n".encode('utf-8'))
 
 

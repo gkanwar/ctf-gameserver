@@ -1,10 +1,14 @@
 import logging
 
 
-def notify(*args, **kwargs):
-
+def notify(key):
     try:
         import systemd.daemon
-        return systemd.daemon.notify(*args, **kwargs)
+        if key.startswith('READY'):
+            return systemd.daemon.notify(systemd.daemon.Notification.READY)
+        elif key.startswith('WATCHDOG'):
+            return systemd.daemon.notify(systemd.daemon.Notification.WATCHDOG)
+        else:
+            raise RuntimeError(f'Unknown key {key}')
     except ImportError:
-        logging.info('Ignoring daemon notification due to missing systemd module')
+        logging.info('Ignoring daemon notification due to missing systemd module', exc_info=True)

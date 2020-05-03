@@ -34,7 +34,7 @@ def register(request):
         if user_form.is_valid() and team_form.is_valid():
             user = user_form.save()
             team_form.save(user)
-            user_form.send_confirmation_mail(request)
+            # user_form.send_confirmation_mail(request)
 
             messages.success(request, _('Successful registration! A confirmation mail has been sent to your '
                                         'formal email adress. Please open the link inside that email in '

@@ -103,15 +103,15 @@ def main():
 
     if args.journald:
         try:
-            from systemd.journal import JournalHandler
+            from systemd.journal import JournaldLogHandler as JournalHandler
         except ImportError:
             logging.error('systemd module is required for journald logging')
             sys.exit(1)
 
         identifier = "%s-team%03d-tick%03d" % (args.checker, args.team, args.tick)
-        logging.root.addHandler(JournalHandler(SYSLOG_IDENTIFIER=identifier,
-                                               CTF_TEAM_ID=args.team,
-                                               CTF_TICK=args.tick))
+        logging.root.addHandler(JournalHandler(identifier=identifier))
+                                               # CTF_TEAM_ID=args.team,
+                                               # CTF_TICK=args.tick))
     if args.gelf_server is not None:
         try:
             import graypy
